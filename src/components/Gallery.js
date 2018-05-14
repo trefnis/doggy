@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import styled from 'styled-components';
 import Masonry from 'masonry-layout';
-import debounce from 'lodash/fp/debounce';
 
-import PhotoTile from './PhotoTile';
+import PhotoTile, { cardWidth, cardMargin } from './PhotoTile';
+import InfiniteScroll from './InfiniteScroll';
 import { getCurrentBreakpoint } from '../utils/rwd';
+
+const photoTileFixedWidth = cardWidth + cardMargin * 2;
 
 const masonryOptions = {
   mobile: {
@@ -17,86 +18,107 @@ const masonryOptions = {
     columnWidth: '.photo',
   },
   laptop: {
-    columnWidth: 512,
+    columnWidth: photoTileFixedWidth,
     fitWidth: true,
   },
   desktop: {
-    columnWidth: 512,
+    columnWidth: photoTileFixedWidth,
     fitWidth: true,
   },
 };
-
-const GalleryContainer = styled.div`
-  margin: 0 auto;
-`;
 
 class Gallery extends Component {
   state = {
     currentBreakpoint: null,
     width: null,
+    isLayingOutPhotos: true,
   };
 
   componentDidMount() {
-    window.addEventListener('resize', this.update);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.update);
-  }
-
-  update = debounce(200, () => {
     const width = this.container.offsetWidth;
     const currentBreakpoint = getCurrentBreakpoint();
 
-    this.setState({ width, currentBreakpoint }, () => {
-      const shouldRecreateMasonry =
-        !this.masonry ||
-        this.masonry.option.columnWidth !==
-          masonryOptions[getCurrentBreakpoint()].columnWidth;
+    this.setState({ width, currentBreakpoint });
+  }
 
-      if (shouldRecreateMasonry) {
-        this.layout();
-      }
-    });
-  });
-
-  layout = () => {
+  componentWillUnmount() {
     if (this.masonry) {
       this.masonry.destroy();
     }
+  }
 
+  componentDidUpdate(prevProps) {
+    const { photos: previousPhotos } = prevProps;
+    const { photos: currentPhotos, batch } = this.props;
+
+    if (previousPhotos === currentPhotos) {
+      return;
+    }
+
+    if (previousPhotos.length === 0) {
+      this.layout();
+    } else {
+      this.layoutNewPhotos(batch);
+    }
+  }
+
+  layoutNewPhotos(batch) {
+    const newImages = this.container.querySelectorAll(`.photo-batch-${batch}`);
+
+    this.masonry.once('layoutComplete', () => {
+      this.setState({ isLayingOutPhotos: false });
+    });
+
+    this.masonry.appended(newImages);
+  }
+
+  layout = () => {
     const options = {
       ...masonryOptions[this.state.currentBreakpoint],
       itemSelector: '.photo',
     };
 
     this.masonry = new Masonry(this.container, options);
+
+    this.masonry.once('layoutComplete', () => {
+      this.setState({ isLayingOutPhotos: false });
+    });
+
+    this.masonry.layout();
   };
 
+  // Don't use createRef to force being called before componentDidMount
   refHandler = container => {
     this.container = container;
-    this.update();
   };
 
   render() {
-    const { currentBreakpoint, width } = this.state;
+    const { currentBreakpoint, width, isLayingOutPhotos } = this.state;
+    const { photos, isFetchingPhotos, fetchNextPhotos } = this.props;
 
-    // TODO: loader
     return (
-      <GalleryContainer innerRef={this.refHandler}>
-        {currentBreakpoint &&
-          width &&
-          this.props.photos.map(photo => (
-            <div className="photo" key={photo.id}>
-              <PhotoTile
+      <InfiniteScroll
+        isLoading={isFetchingPhotos || isLayingOutPhotos}
+        fetch={fetchNextPhotos}
+      >
+        <div ref={this.refHandler} style={{ margin: '0 auto' }}>
+          {currentBreakpoint &&
+            width &&
+            photos.map(photo => (
+              <div
+                className={`photo photo-batch-${photo.batch}`}
                 key={photo.id}
-                photo={photo}
-                currentBreakpoint={currentBreakpoint}
-                containerWidth={width}
-              />
-            </div>
-          ))}
-      </GalleryContainer>
+              >
+                <PhotoTile
+                  key={photo.id}
+                  photo={photo}
+                  currentBreakpoint={currentBreakpoint}
+                  containerWidth={width}
+                />
+              </div>
+            ))}
+        </div>
+      </InfiniteScroll>
     );
   }
 }

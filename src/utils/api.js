@@ -14,12 +14,13 @@ const flickrClient = axios.create({
 
 export const photoSizeSymbols = ['k', 'h', 'l', 'c', 'z', 'm', 'n'];
 
-export async function fetchPhotosData() {
+export async function fetchPhotosData(page = 1) {
   const { data } = await flickrClient.get('/', {
     params: {
       method: 'flickr.photos.search',
       tags: 'dog',
-      sort: 'relevance',
+      page,
+      per_page: 10,
       extras: [
         'date_upload',
         'description',
@@ -46,7 +47,7 @@ export async function fetchPhotosData() {
         return { size, url, width, height };
       }, presentSizeSymbols);
 
-      return { ...props, sizes };
+      return { ...props, sizes, batch: page };
     });
 
     return photo;

@@ -7,8 +7,8 @@ import Avatar from 'material-ui/Avatar';
 import { media } from '../utils/rwd';
 import { getCorrectImageProps } from '../utils/tileSizing';
 
-const cardWidth = 500;
-const cardMargin = 6;
+export const cardWidth = 500;
+export const cardMargin = 6;
 
 const PhotoTileContainer = styled.div`
   margin: ${cardMargin}px;
@@ -46,25 +46,68 @@ const getAvatarlUrl = ({ owner: userId, farm, iconserver }) =>
   `http://farm${farm}.staticflickr.com/${iconserver}/buddyicons/${userId}.jpg`;
 
 /* No description prop is used due to either risk with XSS/CSRF as flickr allows HTML content or showing ugly escaped html. Correct handling this case would require more effort as security is not trivial and can't be sacrificed. */
-const Gallery = ({ photo, currentBreakpoint, containerWidth }) => (
-  <PhotoTileContainer>
-    <PhotoTile width={containerWidth}>
-      <CardHeader
-        avatar={<Avatar src={getAvatarlUrl(photo)} alt={photo.ownername} />}
-        title={photo.ownername}
-        subheader={getDate(photo.dateupload)}
-      />
-      <PhotoThumbnail
-        imagesWithSizes={photo.sizes}
-        currentBreakpoint={currentBreakpoint}
-        containerWidth={containerWidth}
-        alt={photo.title}
-      />
-      <CardContent>
-        <Typography component="p">{photo.title}</Typography>
-      </CardContent>
-    </PhotoTile>
-  </PhotoTileContainer>
-);
+class Gallery extends React.Component {
+  state = {
+    isVisible: true,
+  };
+
+  containerRef = React.createRef();
+
+  componentDidMount() {
+    const observerOptions = {
+      root: null,
+      rootMargin: `2000px`,
+      threshold: 0,
+    };
+
+    this.observer = new window.IntersectionObserver(
+      this.handleIntersection,
+      observerOptions
+    );
+
+    this.observer.observe(this.containerRef.current);
+  }
+
+  componentWillUnmount() {
+    this.observer.disconnect();
+  }
+
+  handleIntersection = ([entry]) => {
+    this.setState({
+      isVisible: entry.intersectionRatio !== 0,
+    });
+  };
+
+  render() {
+    const { photo, currentBreakpoint, containerWidth } = this.props;
+
+    return (
+      <div ref={this.containerRef}>
+        {this.state.isVisible && (
+          <PhotoTileContainer>
+            <PhotoTile width={containerWidth}>
+              <CardHeader
+                avatar={
+                  <Avatar src={getAvatarlUrl(photo)} alt={photo.ownername} />
+                }
+                title={photo.ownername}
+                subheader={getDate(photo.dateupload)}
+              />
+              <PhotoThumbnail
+                imagesWithSizes={photo.sizes}
+                currentBreakpoint={currentBreakpoint}
+                containerWidth={containerWidth}
+                alt={photo.title}
+              />
+              <CardContent>
+                <Typography component="p">{photo.title}</Typography>
+              </CardContent>
+            </PhotoTile>
+          </PhotoTileContainer>
+        )}
+      </div>
+    );
+  }
+}
 
 export default Gallery;
