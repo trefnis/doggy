@@ -1,6 +1,7 @@
 import React, { Component, createRef, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 const offset = '2000';
 
@@ -48,7 +49,7 @@ class InfiniteScroll extends Component {
       <Fragment>
         {this.props.children}
         <LoaderContainer>
-          {this.props.isLoading && <div>Loading...</div>}
+          {this.props.isLoading && <CircularProgress size={80} />}
         </LoaderContainer>
         <div ref={this.endIndicatorRef} style={{ height: '100px' }} />
       </Fragment>
