@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -49,7 +50,7 @@ const getAvatarlUrl = ({ owner: userId, farm, iconserver }) =>
   `http://farm${farm}.staticflickr.com/${iconserver}/buddyicons/${userId}.jpg`;
 
 /* No description prop is used due to either risk with XSS/CSRF as flickr allows HTML content or showing ugly escaped html. Correct handling this case would require more effort as security is not trivial and can't be sacrificed. */
-class Gallery extends React.Component {
+class GalleryItem extends Component {
   state = {
     isVisible: true,
   };
@@ -113,4 +114,10 @@ class Gallery extends React.Component {
   }
 }
 
-export default Gallery;
+GalleryItem.propTypes = {
+  photo: PropTypes.object.isRequired,
+  currentBreakpoint: PropTypes.string.isRequired,
+  containerWidth: PropTypes.number.isRequired,
+};
+
+export default GalleryItem;

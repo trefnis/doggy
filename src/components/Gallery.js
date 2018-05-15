@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Masonry from 'masonry-layout';
 
-import PhotoTile, { cardWidth, cardMargin } from './PhotoTile';
+import GalleryItem, { cardWidth, cardMargin } from './GalleryItem';
 import InfiniteScroll from './InfiniteScroll';
 import { getCurrentBreakpoint } from '../utils/rwd';
 
@@ -109,7 +109,7 @@ class Gallery extends Component {
                 className={`photo photo-batch-${photo.batch}`}
                 key={photo.id}
               >
-                <PhotoTile
+                <GalleryItem
                   key={photo.id}
                   photo={photo}
                   currentBreakpoint={currentBreakpoint}
@@ -125,6 +125,8 @@ class Gallery extends Component {
 
 Gallery.propTypes = {
   photos: PropTypes.arrayOf(PropTypes.object),
+  isFetchingPhotos: PropTypes.bool.isRequired,
+  fetchNextPhotos: PropTypes.func.isRequired,
 };
 
 Gallery.defaultProps = {

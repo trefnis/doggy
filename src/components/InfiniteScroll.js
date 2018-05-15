@@ -59,6 +59,8 @@ class InfiniteScroll extends Component {
 
 InfiniteScroll.propTypes = {
   children: PropTypes.node.isRequired,
+  isLoading: PropTypes.bool.isRequired,
+  fetch: PropTypes.func.isRequired,
 };
 
 InfiniteScroll.defaultProps = {
