@@ -1,5 +1,3 @@
-# README - Biotechspert
-
 ## Prerequisites
 
 * Node
