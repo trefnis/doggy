@@ -18,9 +18,10 @@ export async function fetchPhotosData(page = 1) {
   const { data } = await flickrClient.get('/', {
     params: {
       method: 'flickr.photos.search',
-      tags: 'dog',
+      text: 'dog',
+      sort: 'interestingness-desc',
       page,
-      per_page: 10,
+      per_page: 20,
       extras: [
         'date_upload',
         'description',
@@ -40,8 +41,8 @@ export async function fetchPhotosData(page = 1) {
       );
 
       const sizes = map(size => {
-        const width = parseInt(props[`width_${size}`]);
-        const height = parseInt(props[`height_${size}`]);
+        const width = parseInt(props[`width_${size}`], 10);
+        const height = parseInt(props[`height_${size}`], 10);
         const url = props[`url_${size}`];
 
         return { size, url, width, height };
@@ -51,5 +52,9 @@ export async function fetchPhotosData(page = 1) {
     });
 
     return photo;
+  } else {
+    const error = new Error(data.message);
+    error.code = data.code;
+    throw error;
   }
 }

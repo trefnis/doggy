@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 import Gallery from './Gallery';
+import ErrorMessage from './ErrorMessage';
 import { fetchPhotosData } from '../utils/api';
 
 class App extends Component {
@@ -8,6 +9,7 @@ class App extends Component {
     page: 1,
     photos: [],
     isFetchingPhotos: true,
+    hasError: false,
   };
 
   componentDidMount() {
@@ -21,7 +23,16 @@ class App extends Component {
   }
 
   async fetchPhotos() {
-    const newPhotos = await fetchPhotosData(this.state.page);
+    let newPhotos;
+    try {
+      newPhotos = await fetchPhotosData(this.state.page);
+    } catch (error) {
+      // Would be logging in real app
+      console.error(error);
+
+      this.setState({ hasError: true });
+      return;
+    }
 
     this.setState(prevState => ({
       photos: prevState.photos.concat(newPhotos),
@@ -36,8 +47,12 @@ class App extends Component {
     }));
   };
 
+  hideError = () => {
+    this.setState({ hasError: false });
+  };
+
   render() {
-    const { photos, isFetchingPhotos, page } = this.state;
+    const { photos, isFetchingPhotos, page, hasError } = this.state;
 
     return (
       <div>
@@ -47,6 +62,7 @@ class App extends Component {
           fetchNextPhotos={this.nextPage}
           isFetchingPhotos={isFetchingPhotos}
         />
+        <ErrorMessage isShown={hasError} close={this.hideError} />
       </div>
     );
   }
