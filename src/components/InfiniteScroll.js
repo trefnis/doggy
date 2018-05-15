@@ -36,13 +36,9 @@ class InfiniteScroll extends Component {
 
   handleIntersection = ([entry]) => {
     if (entry.isIntersecting && !this.props.isLoading) {
-      this.fetch();
+      this.props.fetch();
     }
   };
-
-  fetch() {
-    this.props.fetch();
-  }
 
   render() {
     return (
